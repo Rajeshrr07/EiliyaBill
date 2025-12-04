@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       .insert({
         user_id: userId, // ⭐ IMPORTANT
         total,
-        status: "pending",
+        status: "paid",
       })
       .select()
       .single();

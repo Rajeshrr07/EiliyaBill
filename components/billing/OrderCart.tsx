@@ -50,7 +50,6 @@ export function OrderCart() {
       // OPTIONAL: still keep your local temp store
       addTempItem(items);
       const localOrder = saveOrderLocal(total);
-      console.log("localOrder:", localOrder);
 
       // Call Supabase API
       const res = await fetch("/api/orders", {

@@ -23,7 +23,6 @@ import {
 export default function Dashboard() {
   const [date, setDate] = useState<Date>(new Date());
   const [allOrders, setAllOrders] = useState<Order[]>([]);
-  console.log("allOrders: ", allOrders);
   const [loading, setLoading] = useState(false);
 
   // 1) Fetch orders from API (Supabase)
@@ -74,7 +73,6 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex items-center justify-between p-4 md:p-5">
           <div className="flex flex-col">
-            <p className="text-xs text-muted-foreground">Dashboard</p>
             <h1 className="text-balance text-lg md:text-xl font-medium">
               {date.toLocaleDateString() === today.toLocaleDateString()
                 ? "Today's Performance"
