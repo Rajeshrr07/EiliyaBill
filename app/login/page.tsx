@@ -3,61 +3,57 @@ import { AuthTabs } from "@/components/auth/AuthTabs";
 
 export default function LoginPage() {
   return (
-    <main className="mx-auto max-w-6xl p-6">
-      <div className="grid gap-6 md:grid-cols-2">
-        <section className="rounded-xl border bg-card p-6">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#ffffff_20%,_#f1f5f9_90%)] flex items-center justify-center p-6">
+      <div className="mx-auto max-w-5xl w-full grid gap-12 md:grid-cols-2 items-center">
+        {/* LEFT — MINIMAL MODERN HERO */}
+        <section className="space-y-6 pl-2">
+          <div className="inline-flex items-center gap-2 text-xs font-medium text-slate-600">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            <span className="text-muted-foreground">
-              Designed for small shops
-            </span>
+            Built for small shops
           </div>
-          <h1 className="mb-2 text-pretty text-3xl font-semibold">
-            Bill faster. Sell smarter.
+
+          <h1 className="text-2xl md:text-4xl font-bold leading-tight text-slate-900 tracking-tight">
+            Fast Billing.
+            <span className="text-emerald-600">Zero Complexity.</span>
           </h1>
-          <p className="mb-6 text-muted-foreground">
-            Create bills in seconds, track sales live, and manage products
-            effortlessly on mobile and desktop.
+
+          <p className="text-slate-600 text-base max-w-md leading-relaxed">
+            A clean, simple POS system designed to help you bill faster, track
+            sales in real-time, and manage inventory effortlessly.
           </p>
 
-          <ul className="mb-6 grid gap-2 md:grid-cols-2">
-            <li className="rounded-lg border bg-background px-3 py-2 text-sm">
-              Quick checkout
-            </li>
-            <li className="rounded-lg border bg-background px-3 py-2 text-sm">
-              Live sales
-            </li>
-            <li className="rounded-lg border bg-background px-3 py-2 text-sm">
-              Inventory
-            </li>
-            <li className="rounded-lg border bg-background px-3 py-2 text-sm">
-              Staff accounts
-            </li>
-          </ul>
-
-          {/* <div className="rounded-xl border bg-background p-4">
-            <Image
-              src="/images/auth-screens.png"
-              alt="Example authentication card design"
-              className="h-auto w-full rounded-lg"
-            />
-          </div> */}
-
-          <p className="mt-4 inline-flex items-center gap-2 rounded-lg border bg-emerald-500/10 px-3 py-2 text-xs">
-            <span className="h-3 w-3 rounded-full bg-emerald-500" />
-            {"Your data is encrypted and backed up automatically."}
-          </p>
+          {/* Feature bullets — modern, minimal */}
+          <div className="grid grid-cols-2 gap-3 pt-4">
+            {[
+              "1-Tap Billing",
+              "Live Sales View",
+              "Smart Inventory",
+              "Staff Roles",
+            ].map((item) => (
+              <div
+                key={item}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 rounded-lg border border-slate-200"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                {item}
+              </div>
+            ))}
+          </div>
         </section>
 
-        <section>
-          <Card className="overflow-hidden">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-xl">Welcome back</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Login or create an account to continue
+        {/* RIGHT — PREMIUM LOGIN CARD */}
+        <section className="flex justify-center">
+          <Card className="w-full max-w-md border border-slate-200 rounded-2xl shadow-sm bg-white/80 backdrop-blur">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
+                Welcome back 👋
+              </CardTitle>
+              <p className="text-sm text-slate-500">
+                Sign in to continue to your dashboard
               </p>
             </CardHeader>
-            <CardContent>
+
+            <CardContent className="pt-4">
               <AuthTabs />
             </CardContent>
           </Card>
