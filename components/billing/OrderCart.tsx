@@ -143,7 +143,7 @@ export function OrderCart() {
                 Print Bill
               </Button>
               <Button
-                className="flex-1 bg.green-600 hover:bg-green-700 text-white cursor-pointer"
+                className="flex-1 bg-green-700 hover:bg-green-700 text-white cursor-pointer"
                 onClick={handleSaveOrder}
                 disabled={saving}
               >

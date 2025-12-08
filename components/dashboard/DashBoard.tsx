@@ -19,6 +19,8 @@ import {
   type KPI,
   type Order,
 } from "@/lib/data";
+import { Button } from "../ui/button";
+import Link from "next/link";
 
 export default function Dashboard() {
   const [date, setDate] = useState<Date>(new Date());
@@ -26,37 +28,68 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
 
   // 1) Fetch orders from API (Supabase)
+  // useEffect(() => {
+  //   const fetchOrders = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const res = await fetch("/api/orders");
+  //       const data = await res.json();
+
+  //       // 🔁 Map Supabase rows -> your Order type
+  //       // Adjust this if your Order type has different field names
+  //       const mapped: Order[] = data.map((row: any) => ({
+  //         id: row.id,
+  //         // assuming your Order type has a Date field like createdAt / date
+  //         createdAt: new Date(row.created_at),
+  //         total: Number(row.total),
+  //         status: row.status ?? "pending",
+  //         // if your Order type has items/categories, you can add them here.
+  //         // e.g.: items: row.items ?? [],
+  //       }));
+
+  //       setAllOrders(mapped);
+  //     } catch (error) {
+  //       console.error("Error loading orders:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchOrders();
+  // }, []);
+
+  // 2) Filter by selected date
+  // const currentOrders = useMemo(
+  //   () => filterOrdersByDate(allOrders, date),
+  //   [allOrders, date]
+  // );
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/orders");
+      const data = await res.json();
+
+      const mapped: Order[] = data.map((row: any) => ({
+        id: row.id,
+        createdAt: new Date(row.created_at),
+        total: Number(row.total),
+        status: row.status ?? "pending",
+        items: row.items, // if you have items field
+      }));
+
+      setAllOrders(mapped);
+    } catch (error) {
+      console.error("Error loading orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("/api/orders");
-        const data = await res.json();
-
-        // 🔁 Map Supabase rows -> your Order type
-        // Adjust this if your Order type has different field names
-        const mapped: Order[] = data.map((row: any) => ({
-          id: row.id,
-          // assuming your Order type has a Date field like createdAt / date
-          createdAt: new Date(row.created_at),
-          total: Number(row.total),
-          status: row.status ?? "pending",
-          // if your Order type has items/categories, you can add them here.
-          // e.g.: items: row.items ?? [],
-        }));
-
-        setAllOrders(mapped);
-      } catch (error) {
-        console.error("Error loading orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
   }, []);
 
-  // 2) Filter by selected date
   const currentOrders = useMemo(
     () => filterOrdersByDate(allOrders, date),
     [allOrders, date]
@@ -137,13 +170,16 @@ export default function Dashboard() {
         {/* Recent Orders */}
         <section className="px-4 md:px-5 pb-4">
           <Card className="bg-card">
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 ">
               <CardTitle className="text-sm font-medium">
                 Recent Orders
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <RecentOrdersTable orders={currentOrders.slice(0, 5)} />
+            <CardContent className="pt-0 h-[40vh] overflow-y-auto">
+              <RecentOrdersTable
+                orders={currentOrders}
+                onChange={fetchOrders}
+              />
             </CardContent>
           </Card>
         </section>

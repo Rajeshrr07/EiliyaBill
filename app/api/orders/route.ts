@@ -106,3 +106,116 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function PATCH(req: Request) {
+  try {
+    const userId = cookies().get("user_id")?.value;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { orderId, total, status } = body as {
+      orderId: string;
+      total?: number;
+      status?: string;
+    };
+
+    if (!orderId) {
+      return NextResponse.json(
+        { error: "orderId is required" },
+        { status: 400 }
+      );
+    }
+
+    const updatePayload: Record<string, any> = {};
+    if (typeof total === "number") updatePayload.total = total;
+    if (status) updatePayload.status = status;
+
+    if (Object.keys(updatePayload).length === 0) {
+      return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+    }
+
+    const { data, error } = await supabaseServer
+      .from("orders")
+      .update(updatePayload)
+      .eq("id", orderId)
+      .eq("user_id", userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Order update error:", error);
+      return NextResponse.json(
+        { error: "Failed to update order" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true, order: data });
+  } catch (err) {
+    console.error("Orders PATCH error:", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const userId = cookies().get("user_id")?.value;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { orderId } = body as { orderId: string };
+
+    if (!orderId) {
+      return NextResponse.json(
+        { error: "orderId is required" },
+        { status: 400 }
+      );
+    }
+
+    // 1) Delete order_items first (if no ON DELETE CASCADE)
+    const { error: itemsError } = await supabaseServer
+      .from("order_items")
+      .delete()
+      .eq("order_id", orderId);
+
+    if (itemsError) {
+      console.error("Delete order_items error:", itemsError);
+      return NextResponse.json(
+        { error: "Failed to delete order items" },
+        { status: 500 }
+      );
+    }
+
+    // 2) Delete order
+    const { error: orderError } = await supabaseServer
+      .from("orders")
+      .delete()
+      .eq("id", orderId)
+      .eq("user_id", userId);
+
+    if (orderError) {
+      console.error("Delete order error:", orderError);
+      return NextResponse.json(
+        { error: "Failed to delete order" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Orders DELETE error:", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
