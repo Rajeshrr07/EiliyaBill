@@ -27,6 +27,7 @@ import {
   BarChart3,
   Settings as SettingsIcon,
   LogOut,
+  Vegan,
 } from "lucide-react";
 import Logo from "@/public/assets/common/logo.jpeg";
 import Image from "next/image";
@@ -36,6 +37,7 @@ import Dashboard from "../dashboard/DashBoard";
 import ProductManage from "../product/ProductManage";
 import ReportsPage from "../report/Reports";
 import SettingsPage from "../settings/SettingsPage";
+import GroceriesTab from "../groceries/Groceries";
 
 type TabType =
   | "dashboard"
@@ -43,9 +45,10 @@ type TabType =
   | "products"
   | "reports"
   | "settings"
+  | "groceries"
   | "logout";
 
-export default function HomeTabs() {
+export default function HomeTabs({ userId }: any) {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
 
   const menuItems = [
@@ -53,6 +56,7 @@ export default function HomeTabs() {
     { key: "billing" as TabType, label: "Billing (POS)", icon: CreditCard },
     { key: "products" as TabType, label: "Products", icon: Package },
     { key: "reports" as TabType, label: "Reports", icon: BarChart3 },
+    { key: "groceries" as TabType, label: "Groceries", icon: Vegan },
     // { key: "settings" as TabType, label: "Settings", icon: SettingsIcon },
     { key: "logout" as TabType, label: "Logout", icon: LogOut },
   ];
@@ -101,10 +105,16 @@ export default function HomeTabs() {
           </div>
         );
 
-      case "settings":
+      // case "settings":
+      //   return (
+      //     <div className="space-y-6">
+      //       <SettingsPage />
+      //     </div>
+      //   );
+      case "groceries":
         return (
-          <div className="space-y-6">
-            <SettingsPage />
+          <div className="space-y-6 m-4">
+            <GroceriesTab userId={userId} />
           </div>
         );
       case "logout":

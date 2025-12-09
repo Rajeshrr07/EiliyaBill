@@ -7,7 +7,7 @@ const Home = async () => {
   console.log("userId: ", userId);
   return (
     <div>
-      <HomeTabs />
+      <HomeTabs userId={userId} />
     </div>
   );
 };
