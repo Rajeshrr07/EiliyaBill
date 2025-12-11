@@ -67,8 +67,6 @@ export default function HomeTabs({ userId }: any) {
     // Clear local storage
     localStorage.removeItem("auth_token");
     localStorage.removeItem("user_id");
-
-    // Redirect to login
     window.location.href = "/login";
   };
 
