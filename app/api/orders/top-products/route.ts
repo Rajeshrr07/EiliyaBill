@@ -1,100 +1,45 @@
-// import { supabaseServer } from "@/lib/supabaseServer";
-// import { NextResponse } from "next/server";
-// import { cookies } from "next/headers";
-
-// export async function GET() {
-//   try {
-//     const userId = cookies().get("user_id")?.value;
-
-//     if (!userId) {
-//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-//     }
-
-//     // ⭐ Fetch only items => through orders belonging to this user
-//     const { data, error } = await supabaseServer
-//       .from("order_items")
-//       .select(
-//         `
-//         product_name,
-//         quantity,
-//         line_total,
-//         orders(user_id)
-//       `
-//       )
-//       .eq("orders.user_id", userId); // ⭐ filter by user
-
-//     if (error) {
-//       console.error("Top products error:", error);
-//       return NextResponse.json({ error }, { status: 500 });
-//     }
-
-//     // Aggregate stats
-//     const stats: Record<string, { qty: number; revenue: number }> = {};
-
-//     data.forEach((item) => {
-//       if (!stats[item.product_name]) {
-//         stats[item.product_name] = { qty: 0, revenue: 0 };
-//       }
-//       stats[item.product_name].qty += item.quantity;
-//       stats[item.product_name].revenue += item.line_total;
-//     });
-
-//     const totalRevenue = Object.values(stats).reduce(
-//       (acc, s) => acc + s.revenue,
-//       0
-//     );
-
-//     const formatted = Object.entries(stats).map(([name, s]) => ({
-//       product: name,
-//       qtySold: s.qty,
-//       revenue: s.revenue,
-//       share:
-//         totalRevenue > 0
-//           ? ((s.revenue / totalRevenue) * 100).toFixed(1) + "%"
-//           : "0%",
-//     }));
-
-//     return NextResponse.json(formatted);
-//   } catch (err) {
-//     console.error("Stats API Error:", err);
-//     return NextResponse.json({ error: "Server error" }, { status: 500 });
-//   }
-// }
-
 import { supabaseServer } from "@/lib/supabaseServer";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const userId = cookies().get("user_id")?.value;
-
-    if (!userId) {
+    if (!userId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
-    // ⭐ Correct way: join orders, but filter by orders.user_id
+    const { searchParams } = new URL(req.url);
+    const month = Number(searchParams.get("month"));
+    const year = Number(searchParams.get("year"));
+
+    const applyFilter = month > 0 && year > 0;
+
     const { data, error } = await supabaseServer
       .from("order_items")
       .select(
         `
-          product_name,
-          quantity,
-          line_total,
-          orders!inner(user_id)
-        `
+        product_name,
+        quantity,
+        line_total,
+        orders!inner(user_id, created_at)
+      `
       )
-      .eq("orders.user_id", userId); // ⭐ THIS NOW WORKS
+      .eq("orders.user_id", userId);
 
-    if (error) {
-      console.error("Top products error:", error);
+    if (error)
       return NextResponse.json({ error: error.message }, { status: 500 });
-    }
 
-    // Aggregate totals
+    // Filter by month/year
+    const filtered = applyFilter
+      ? data.filter((row: any) => {
+          const d = new Date(row.orders.created_at);
+          return d.getFullYear() === year && d.getMonth() + 1 === month;
+        })
+      : data;
+
     const stats: Record<string, { qty: number; revenue: number }> = {};
 
-    data.forEach((item) => {
+    filtered.forEach((item: any) => {
       if (!stats[item.product_name]) {
         stats[item.product_name] = { qty: 0, revenue: 0 };
       }
@@ -107,7 +52,7 @@ export async function GET() {
       0
     );
 
-    const formatted = Object.entries(stats).map(([name, s]) => ({
+    const response = Object.entries(stats).map(([name, s]) => ({
       product: name,
       qtySold: s.qty,
       revenue: s.revenue,
@@ -117,9 +62,9 @@ export async function GET() {
           : "0%",
     }));
 
-    return NextResponse.json(formatted);
+    return NextResponse.json(response);
   } catch (err) {
-    console.error("Stats API Error:", err);
+    console.error("Top Products Error:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

@@ -3,36 +3,36 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 export async function GET() {
-  // ⭐ 1. Get logged-in user ID from cookies
-  const userId = cookies().get("user_id")?.value;
+  try {
+    const userId = cookies().get("user_id")?.value;
 
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!userId)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { data, error } = await supabaseServer
+      .from("orders")
+      .select("total, created_at")
+      .eq("user_id", userId)
+      .order("created_at");
+
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Group by full date (YYYY-MM-DD)
+    const map: Record<string, number> = {};
+
+    data.forEach((o) => {
+      const fullDate = o.created_at.split("T")[0];
+      map[fullDate] = (map[fullDate] || 0) + o.total;
+    });
+
+    const formatted = Object.entries(map).map(([date, sales]) => ({
+      date, // full: 2025-12-08
+      sales,
+    }));
+
+    return NextResponse.json(formatted);
+  } catch (err) {
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
-
-  // ⭐ 2. Fetch ONLY this user's orders
-  const { data, error } = await supabaseServer
-    .from("orders")
-    .select("total, created_at, user_id")
-    .eq("user_id", userId) // ⭐ Filter by user
-    .order("created_at", { ascending: true });
-
-  if (error) return NextResponse.json({ error }, { status: 500 });
-
-  // ⭐ 3. Group by day
-  const daily: Record<string, number> = {};
-
-  data.forEach((order) => {
-    const day = order.created_at.split("T")[0]; // e.g. "2025-06-12"
-    if (!daily[day]) daily[day] = 0;
-    daily[day] += order.total;
-  });
-
-  // ⭐ 4. Format for chart
-  const formatted = Object.entries(daily).map(([day, total]) => ({
-    date: day.slice(5), // "06-12"
-    sales: total,
-  }));
-
-  return NextResponse.json(formatted);
 }

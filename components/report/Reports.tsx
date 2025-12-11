@@ -1,16 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -19,13 +13,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+
+import { AreaChart, Area, CartesianGrid, XAxis, YAxis } from "recharts";
 import { RefreshCw, FileDown, Printer } from "lucide-react";
 import { exportToCSV } from "@/lib/export-utils";
 
@@ -33,80 +28,118 @@ export default function ReportsPage() {
   const [salesData, setSalesData] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
   const [salesHistory, setSalesHistory] = useState([]);
-
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Load data from Supabase APIs
+  // DEFAULT MONTH = current month
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+
+  const [year, month] = selectedMonth.split("-").map(Number);
+
+  /* -------------------------------------------------
+     FETCH SALES HISTORY + DAILY SALES ONCE
+  ------------------------------------------------- */
   useEffect(() => {
-    fetch("/api/orders/daily")
-      .then((r) => r.json())
-      .then(setSalesData);
-
-    fetch("/api/orders/top-products")
-      .then((r) => r.json())
-      .then(setTopProducts);
-
     fetch("/api/orders")
       .then((r) => r.json())
       .then((data) => {
-        const mapped = data.map((o: any, i: number) => ({
+        const mapped = data.map((o) => ({
           id: o.id,
-          dateTime: new Date(o.created_at).toLocaleString(),
-          receipt: "#ORD-" + o.id.slice(0, 6).toUpperCase(),
-          items: o.items_count ?? "—", // optional if you track item count
+          date: o.date, // Full ISO date from backend
+          dateTime: new Date(o.date).toLocaleString(),
+          receipt: o.receipt,
+          items: o.items ?? "—",
           total: o.total,
         }));
         setSalesHistory(mapped);
       });
+
+    fetch("/api/orders/daily")
+      .then((r) => r.json())
+      .then(setSalesData);
   }, []);
 
-  const filteredHistory = salesHistory.filter(
-    (sale) =>
-      sale.receipt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sale.dateTime.includes(searchQuery)
+  /* -------------------------------------------------
+     FETCH TOP PRODUCTS WHEN MONTH CHANGES
+  ------------------------------------------------- */
+  useEffect(() => {
+    fetch(`/api/orders/top-products?month=${month}&year=${year}`)
+      .then((r) => r.json())
+      .then(setTopProducts);
+  }, [month, year]);
+
+  /* -------------------------------------------------
+     MONTH FILTERING LOGIC (No Date() issues)
+  ------------------------------------------------- */
+  const monthMatches = (dateStr) => {
+    const [yyyy, mm] = dateStr.split("-");
+    return Number(yyyy) === year && Number(mm) === month;
+  };
+
+  /* -------------------------------------------------
+     FIX DAILY SALES
+  ------------------------------------------------- */
+  const fixedDailySales = useMemo(() => {
+    return salesData.map((d) => ({
+      fullDate: d.date, // "2025-12-08"
+      dayLabel: d.date.slice(8), // "08"
+      sales: d.sales,
+    }));
+  }, [salesData]);
+
+  const filteredDailySales = fixedDailySales.filter((d) =>
+    monthMatches(d.fullDate)
   );
 
-  const totalSales = salesHistory.reduce((acc, s) => acc + s.total, 0);
-  const totalOrders = salesHistory.length;
+  /* -------------------------------------------------
+     FILTER SALES HISTORY
+  ------------------------------------------------- */
+  const filteredHistory = salesHistory.filter((row) => monthMatches(row.date));
 
+  /* -------------------------------------------------
+     KPI VALUES
+  ------------------------------------------------- */
+  const totalSales = filteredHistory.reduce((acc, row) => acc + row.total, 0);
+  const totalOrders = filteredHistory.length;
   const avgOrderValue =
     totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0;
 
+  /* -------------------------------------------------
+     RENDER PAGE UI
+  ------------------------------------------------- */
   return (
     <div className="flex min-h-screen w-full flex-col bg-background p-6">
-      {/* Header */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+        <div className="flex items-center gap-2">
           <h1 className="text-2xl font-semibold">Reports</h1>
-          <Badge
-            variant="secondary"
-            className="bg-orange-100 text-orange-700 hover:bg-orange-100"
-          >
-            Last 30 days
+          <Badge>
+            {new Date(selectedMonth + "-01").toLocaleString("en-IN", {
+              month: "long",
+              year: "numeric",
+            })}
           </Badge>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            className="gap-2 border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100"
-          >
-            Report: Sales
+        <div className="flex items-center gap-3">
+          <Input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="w-[160px]"
+          />
+
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            <RefreshCw className="size-4" /> Refresh
           </Button>
 
           <Button
-            variant="outline"
-            className="gap-2 bg-orange-100 text-orange-700 hover:bg-orange-200"
-            onClick={() => window.location.reload()}
-          >
-            <RefreshCw className="size-4" />
-            Refresh
-          </Button>
-          <Button
-            className="gap-2 bg-orange-500 text-white hover:bg-orange-600"
+            className="bg-orange-500 text-white"
             onClick={() => {
               const headers = ["Date", "Receipt", "Items", "Total"];
-              const rows = salesHistory.map((s) => [
+              const rows = filteredHistory.map((s) => [
                 s.dateTime,
                 s.receipt,
                 s.items,
@@ -115,57 +148,44 @@ export default function ReportsPage() {
               exportToCSV(headers, rows, "sales-report.csv");
             }}
           >
-            <FileDown className="size-4" />
-            Export CSV
+            <FileDown className="size-4" /> Export CSV
           </Button>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-700">
-              Total Sales
-            </CardTitle>
+      {/* KPI CARDS */}
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <Card className="bg-orange-50 border-orange-200">
+          <CardHeader>
+            <CardTitle>Total Sales</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-900">
-              ₹ {totalSales.toLocaleString()}
-            </div>
+            <div className="text-3xl font-bold">₹ {totalSales}</div>
           </CardContent>
         </Card>
 
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-700">
-              Orders
-            </CardTitle>
+        <Card className="bg-orange-50 border-orange-200">
+          <CardHeader>
+            <CardTitle>Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-900">
-              {totalOrders}
-            </div>
+            <div className="text-3xl font-bold">{totalOrders}</div>
           </CardContent>
         </Card>
 
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-700">
-              Avg. Order Value
-            </CardTitle>
+        <Card className="bg-orange-50 border-orange-200">
+          <CardHeader>
+            <CardTitle>Avg Order Value</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-900">
-              ₹ {avgOrderValue}
-            </div>
+            <div className="text-3xl font-bold">₹ {avgOrderValue}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Sales Over Time Chart */}
+      {/* SALES CHART + TOP PRODUCTS */}
+      <div className="grid lg:grid-cols-2 gap-6 mb-6">
+        {/* SALES OVER TIME CHART */}
         <Card>
           <CardHeader>
             <CardTitle>Sales Over Time</CardTitle>
@@ -173,27 +193,30 @@ export default function ReportsPage() {
           <CardContent>
             <ChartContainer
               config={{
-                sales: { label: "Sales", color: "#fb923c" },
+                sales: {
+                  label: "Sales",
+                  color: "hsl(var(--chart-1))",
+                },
               }}
               className="h-[300px]"
             >
-              <AreaChart data={salesData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="date" className="text-xs" />
-                <YAxis className="text-xs" />
+              <AreaChart data={filteredDailySales}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="dayLabel" />
+                <YAxis />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Area
                   type="monotone"
                   dataKey="sales"
-                  stroke="#fb923c"
-                  fill="#fb923c40"
+                  stroke="hsl(var(--chart-1))"
+                  fill="hsl(var(--chart-1))"
                 />
               </AreaChart>
             </ChartContainer>
           </CardContent>
         </Card>
 
-        {/* Top Products */}
+        {/* TOP PRODUCTS TABLE */}
         <Card>
           <CardHeader>
             <CardTitle>Top Products</CardTitle>
@@ -202,22 +225,14 @@ export default function ReportsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="bg-orange-50 text-orange-700">
-                    Product
-                  </TableHead>
-                  <TableHead className="bg-orange-50 text-orange-700">
-                    Qty Sold
-                  </TableHead>
-                  <TableHead className="bg-orange-50 text-orange-700">
-                    Revenue
-                  </TableHead>
-                  <TableHead className="bg-orange-50 text-orange-700">
-                    Share
-                  </TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead>Qty</TableHead>
+                  <TableHead>Revenue</TableHead>
+                  <TableHead>Share</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topProducts.map((p: any, i: number) => (
+                {topProducts.map((p, i) => (
                   <TableRow key={i}>
                     <TableCell>{p.product}</TableCell>
                     <TableCell>{p.qtySold}</TableCell>
@@ -231,61 +246,56 @@ export default function ReportsPage() {
         </Card>
       </div>
 
-      {/* Sales History */}
+      {/* SALES HISTORY */}
       <Card>
         <CardHeader>
           <CardTitle>Sales History</CardTitle>
         </CardHeader>
-
         <CardContent>
           <div className="flex items-center gap-2 mb-4">
             <Input
-              placeholder="Search receipts"
+              placeholder="Search receipt"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-[280px]"
+              className="w-[250px]"
             />
-            <Button
-              variant="outline"
-              className="gap-2 bg-orange-100 text-orange-700 hover:bg-orange-200"
-              onClick={() => window.print()}
-            >
-              <Printer className="size-4" />
-              Print
+            <Button variant="outline" onClick={() => window.print()}>
+              <Printer className="size-4" /> Print
             </Button>
           </div>
-
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="bg-orange-50 text-orange-700">
-                  Date & Time
-                </TableHead>
-                <TableHead className="bg-orange-50 text-orange-700">
-                  Receipt
-                </TableHead>
-                <TableHead className="bg-orange-50 text-orange-700">
-                  Items
-                </TableHead>
-                <TableHead className="bg-orange-50 text-orange-700">
-                  Total
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {filteredHistory.map((sale) => (
-                <TableRow key={sale.id}>
-                  <TableCell>{sale.dateTime}</TableCell>
-                  <TableCell className="text-orange-700">
-                    {sale.receipt}
-                  </TableCell>
-                  <TableCell>{sale.items}</TableCell>
-                  <TableCell>₹ {sale.total}</TableCell>
+          <div className="h-64 overflow-y-scroll">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Receipt</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Total</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+
+              <TableBody>
+                {filteredHistory
+                  .filter(
+                    (row) =>
+                      row.receipt
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) ||
+                      row.dateTime.includes(searchQuery)
+                  )
+                  .map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell>{row.dateTime}</TableCell>
+                      <TableCell className="text-orange-700">
+                        {row.receipt}
+                      </TableCell>
+                      <TableCell>{row.items}</TableCell>
+                      <TableCell>₹ {row.total}</TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
