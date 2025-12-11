@@ -69,8 +69,6 @@ export function OrderCart() {
       }
 
       const data = await res.json();
-      console.log("Saved order to DB:", data);
-
       clearCart();
       toast.success(`Order ${data.orderId} saved successfully!`);
     } catch (error) {
@@ -100,6 +98,9 @@ export function OrderCart() {
               <TableRow>
                 <TableHead className="text-left text-white">Item</TableHead>
                 <TableHead className="text-center text-white">Qty</TableHead>
+                <TableHead className="text-center text-white">
+                  Payment Method
+                </TableHead>
                 <TableHead className="text-right text-white">Price</TableHead>
                 <TableHead className="text-right text-white">Total</TableHead>
                 <TableHead className="text-center text-white">
@@ -116,7 +117,7 @@ export function OrderCart() {
 
             <TableFooter className="w-full bg-white">
               <TableRow className="font-semibold border-t">
-                <TableCell colSpan={3} className="text-right">
+                <TableCell colSpan={4} className="text-right">
                   Total
                 </TableCell>
                 <TableCell className="text-right">₹ {total}</TableCell>

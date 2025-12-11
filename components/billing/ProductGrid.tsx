@@ -9,7 +9,6 @@ export function ProductGrid() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [products, setProducts] = useState<Product[]>([]);
-  console.log("products: ", products);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -25,7 +24,7 @@ export function ProductGrid() {
   }, []);
 
   const filteredProducts = useMemo(() => {
-  const list = Array.isArray(products) ? products : []; // 🔥 prevents crash
+  const list = Array.isArray(products) ? products : []; // prevents crash
 
   return list.filter((product) => {
     const matchesSearch = product.name

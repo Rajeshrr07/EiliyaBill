@@ -3,13 +3,9 @@ import { cookies } from "next/headers";
 import React from "react";
 
 const Home = async () => {
-  const userId = await cookies().get("user_id")?.value;
-  console.log("userId: ", userId);
-  return (
-    <div>
-      <HomeTabs userId={userId} />
-    </div>
-  );
+  const cookieStore = await cookies();
+  const userId = cookieStore.get("user_id")?.value;
+  return <HomeTabs userId={userId} />;
 };
 
 export default Home;

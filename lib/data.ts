@@ -36,6 +36,7 @@ export type Order = {
   status: "paid" | "pending";
   createdAt: string; // ISO
   category: "Beverages" | "Snacks" | "Meals" | "Desserts";
+  payment_method: "Offline" | "Online";
 };
 
 export type KPI = {
@@ -124,14 +125,56 @@ export function filterOrdersByDate(orders: Order[], date: Date) {
   });
 }
 
+// export function computeKPIs(orders: Order[]): KPI {
+//   const revenue = sum(
+//     orders.filter((o) => o.status === "paid").map((o) => o.total)
+//   );
+//   const ordersCount = orders.length;
+//   const avgTicket = ordersCount ? Math.round(revenue / ordersCount) : 0;
+//   const refunds = 0; // mock demo; no refunds in dataset
+//   return { revenue, orders: ordersCount, avgTicket, refunds };
+// }
 export function computeKPIs(orders: Order[]): KPI {
+  // Total paid revenue
   const revenue = sum(
     orders.filter((o) => o.status === "paid").map((o) => o.total)
   );
+
   const ordersCount = orders.length;
   const avgTicket = ordersCount ? Math.round(revenue / ordersCount) : 0;
-  const refunds = 0; // mock demo; no refunds in dataset
-  return { revenue, orders: ordersCount, avgTicket, refunds };
+
+  // ---- Payment Method Revenue Breakdown ----
+  let offlineRevenue = 0;
+  let onlineRevenue = 0;
+  // let mixedRevenue = 0;
+
+  orders.forEach((o) => {
+    if (o.status !== "paid") return;
+
+    switch (o.payment_method) {
+      case "Offline":
+        offlineRevenue += o.total;
+        break;
+
+      case "Online":
+        onlineRevenue += o.total;
+        break;
+
+      // case "Mixed":
+      //   mixedRevenue += o.total;
+      //   break;
+    }
+  });
+
+  return {
+    revenue,
+    offlineRevenue,
+    onlineRevenue,
+    // mixedRevenue,
+    orders: ordersCount,
+    avgTicket,
+    refunds: 0, // still mock
+  };
 }
 
 function sum(arr: number[]) {

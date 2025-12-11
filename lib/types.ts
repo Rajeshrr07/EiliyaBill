@@ -1,26 +1,27 @@
 export interface Product {
-  id: string
-  name: string
-  price: number
-  category: string
-  image?: string
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  image?: string;
 }
 
 export interface CartItem {
-  product: Product
-  quantity: number
+  product: Product;
+  quantity: number;
+  paymentMethod: "Offline" | "Online";
 }
 
 export interface Order {
-  id: string
-  items: CartItem[]
-  total: number
-  createdAt: Date
-  status: "pending" | "completed" | "cancelled"
+  id: string;
+  items: CartItem[];
+  total: number;
+  createdAt: Date;
+  status: "pending" | "completed" | "cancelled";
 }
 
 export interface User {
-  id: string
-  name: string
-  email: string
+  id: string;
+  name: string;
+  email: string;
 }

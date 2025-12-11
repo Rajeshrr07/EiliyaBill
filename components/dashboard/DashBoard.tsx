@@ -27,54 +27,17 @@ export default function Dashboard() {
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 1) Fetch orders from API (Supabase)
-  // useEffect(() => {
-  //   const fetchOrders = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const res = await fetch("/api/orders");
-  //       const data = await res.json();
-
-  //       // 🔁 Map Supabase rows -> your Order type
-  //       // Adjust this if your Order type has different field names
-  //       const mapped: Order[] = data.map((row: any) => ({
-  //         id: row.id,
-  //         // assuming your Order type has a Date field like createdAt / date
-  //         createdAt: new Date(row.created_at),
-  //         total: Number(row.total),
-  //         status: row.status ?? "pending",
-  //         // if your Order type has items/categories, you can add them here.
-  //         // e.g.: items: row.items ?? [],
-  //       }));
-
-  //       setAllOrders(mapped);
-  //     } catch (error) {
-  //       console.error("Error loading orders:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchOrders();
-  // }, []);
-
-  // 2) Filter by selected date
-  // const currentOrders = useMemo(
-  //   () => filterOrdersByDate(allOrders, date),
-  //   [allOrders, date]
-  // );
-
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const res = await fetch("/api/orders");
       const data = await res.json();
-
       const mapped: Order[] = data.map((row: any) => ({
         id: row.id,
         createdAt: new Date(row.created_at),
         total: Number(row.total),
         status: row.status ?? "pending",
+        payment_method: row.payment_method ?? "Offline",
         items: row.items, // if you have items field
       }));
 
@@ -95,8 +58,8 @@ export default function Dashboard() {
     [allOrders, date]
   );
 
-  // 3) Compute KPIs from currentOrders
   const kpis: KPI = useMemo(() => computeKPIs(currentOrders), [currentOrders]);
+  console.log("kpis: ", kpis);
 
   const today = new Date();
 
@@ -123,7 +86,18 @@ export default function Dashboard() {
 
         {/* KPI Row */}
         <section className="grid grid-cols-1 md:grid-cols-4 gap-3 p-4 md:p-5">
-          <KpiTile label="Revenue" value={formatCurrency(kpis.revenue ?? 0)} />
+          <KpiTile
+            label="Revenue From Offline"
+            value={formatCurrency(kpis.offlineRevenue ?? 0)}
+          />
+          <KpiTile
+            label="Revenue From Online"
+            value={formatCurrency(kpis.onlineRevenue ?? 0)}
+          />
+          <KpiTile
+            label="Total Revenue"
+            value={formatCurrency(kpis.revenue ?? 0)}
+          />
           <KpiTile label="Orders" value={String(kpis.orders ?? 0)} />
           <KpiTile
             label="Avg Ticket"
