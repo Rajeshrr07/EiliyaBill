@@ -59,8 +59,6 @@ export default function Dashboard() {
   );
 
   const kpis: KPI = useMemo(() => computeKPIs(currentOrders), [currentOrders]);
-  console.log("kpis: ", kpis);
-
   const today = new Date();
 
   return (

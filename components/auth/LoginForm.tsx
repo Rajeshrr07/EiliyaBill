@@ -16,9 +16,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
+import { ForgotPasswordDialog } from "./ForgotPasswordDialog";
+import { Eye, EyeOff } from "lucide-react";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+} from "../ui/input-group";
+import { useState } from "react";
 
 export function LoginForm() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(LoginSchema),
@@ -89,7 +98,27 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
+                <InputGroup>
+                  <InputGroupInput
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    {...field}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    {showPassword ? (
+                      <EyeOff
+                        className="h-4 w-4 cursor-pointer"
+                        onClick={() => setShowPassword(false)}
+                      />
+                    ) : (
+                      <Eye
+                        className="h-4 w-4 cursor-pointer"
+                        onClick={() => setShowPassword(true)}
+                      />
+                    )}
+                  </InputGroupAddon>
+                </InputGroup>
+                {/* <Input type="password" placeholder="••••••••" {...field} /> */}
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -118,12 +147,7 @@ export function LoginForm() {
               </FormItem>
             )}
           />
-          <Button
-            variant={"ghost"}
-            className="text-sm text-muted-foreground underline-offset-4 hover:underline cursor-pointer hover:bg-none"
-          >
-            Forgot password?
-          </Button>
+          <ForgotPasswordDialog />
         </div>
 
         {/* Submit */}
