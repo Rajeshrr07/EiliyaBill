@@ -64,8 +64,7 @@ export async function POST(req: Request) {
     /* ---------------------------------
        1) Insert parent order
     ----------------------------------*/
-    const mainPaymentMethod =
-      items.length === 1 ? items[0].paymentMethod : "Mixed"; // if multiple payment types
+    const mainPaymentMethod = items[0]?.paymentMethod ?? "Offline"; // if multiple payment types
 
     const { data: order, error: orderError } = await supabaseServer
       .from("orders")
@@ -141,7 +140,7 @@ export async function PATCH(req: Request) {
       orderId: string;
       total?: number;
       status?: string;
-      payment_method?: "Online" | "Offline" | "Mixed";
+      payment_method?: "Online" | "Offline";
     };
 
     if (!orderId)

@@ -479,19 +479,18 @@ function StatusPill({ status }: { status: Order["status"] }) {
 =========================================== */
 function PaymentPill({ method }: { method: string }) {
   const isOnline = method === "Online";
-  const isMixed = method === "Mixed";
 
-  const styles = isMixed
-    ? "bg-purple-100 text-purple-800"
-    : isOnline
-      ? "bg-emerald-100 text-emerald-800"
-      : "bg-blue-100 text-blue-800";
+  const styles = isOnline
+    ? "bg-emerald-100 text-emerald-800"
+    : "bg-blue-100 text-blue-800"; // offline
+
+  const label = isOnline ? "Online" : "Offline";
 
   return (
     <span
       className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-medium ${styles}`}
     >
-      {method}
+      {label}
     </span>
   );
 }
