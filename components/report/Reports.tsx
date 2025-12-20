@@ -232,14 +232,20 @@ export default function ReportsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topProducts.map((p, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{p.product}</TableCell>
-                    <TableCell>{p.qtySold}</TableCell>
-                    <TableCell>₹ {p.revenue}</TableCell>
-                    <TableCell>{p.share}</TableCell>
-                  </TableRow>
-                ))}
+                {[...topProducts]
+                  .sort(
+                    (a, b) =>
+                      parseFloat(b.share.replace("%", "")) -
+                      parseFloat(a.share.replace("%", ""))
+                  )
+                  .map((p, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{p.product}</TableCell>
+                      <TableCell>{p.qtySold}</TableCell>
+                      <TableCell>₹ {p.revenue}</TableCell>
+                      <TableCell>{p.share}</TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </CardContent>

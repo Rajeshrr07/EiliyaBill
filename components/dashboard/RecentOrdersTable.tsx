@@ -246,9 +246,9 @@ export function RecentOrdersTable({ orders, onChange }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTotal, setEditTotal] = useState<number | null>(null);
   const [editStatus, setEditStatus] = useState<Order["status"]>("paid");
-  const [editPayment, setEditPayment] = useState<"Offline" | "Online">(
-    "Offline"
-  );
+  const [editPayment, setEditPayment] = useState<
+    "Offline" | "Online" | "Zomoto"
+  >("Offline");
   const [saving, setSaving] = useState(false);
 
   function startEdit(o: Order) {
@@ -370,6 +370,7 @@ export function RecentOrdersTable({ orders, onChange }: Props) {
                   >
                     <option value="Offline">Offline</option>
                     <option value="Online">Online</option>
+                    <option value="Zomoto">Zomoto</option>
                   </select>
                 ) : (
                   <PaymentPill method={o.payment_method} />
@@ -479,12 +480,15 @@ function StatusPill({ status }: { status: Order["status"] }) {
 =========================================== */
 function PaymentPill({ method }: { method: string }) {
   const isOnline = method === "Online";
+  const isZomoto = method === "Zomoto";
 
   const styles = isOnline
     ? "bg-emerald-100 text-emerald-800"
-    : "bg-blue-100 text-blue-800"; // offline
+    : isZomoto
+      ? "bg-red-500 text-white"
+      : "bg-blue-100 text-blue-800"; // offline
 
-  const label = isOnline ? "Online" : "Offline";
+  const label = isOnline ? "Online" : isZomoto ? "Zomoto" : "Offline";
 
   return (
     <span

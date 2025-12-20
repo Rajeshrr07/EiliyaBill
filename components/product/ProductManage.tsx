@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import {
   Search,
   Plus,
-  Download,
   Save,
   AlertTriangle,
   PauseCircle,
@@ -305,7 +304,13 @@ export default function ProductManage() {
                             <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden">
                               {product.image ? (
                                 <Image
-                                  src={product.image}
+                                  src={
+                                    typeof product.image === "string" &&
+                                    (product.image.startsWith("/") ||
+                                      product.image.startsWith("http"))
+                                      ? product.image
+                                      : "/images/placeholder.png"
+                                  }
                                   alt={product.name}
                                   width={40}
                                   height={40}

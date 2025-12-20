@@ -150,14 +150,15 @@ export function CartItemComponent({ item }: CartItemProps) {
       </TableCell>
 
       {/* Payment Method */}
-      <TableCell className="text-center">
+      <TableCell className="flex justify-center">
         <Select value={item.paymentMethod} onValueChange={handlePaymentChange}>
           <SelectTrigger className="w-[110px]">
             <SelectValue placeholder="Method" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="text-center">
             <SelectItem value="Offline">Offline</SelectItem>
             <SelectItem value="Online">Online</SelectItem>
+            <SelectItem value="Zomoto">Zomoto</SelectItem>
           </SelectContent>
         </Select>
       </TableCell>

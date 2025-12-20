@@ -93,6 +93,10 @@ export default function Dashboard() {
             value={formatCurrency(kpis.onlineRevenue ?? 0)}
           />
           <KpiTile
+            label="Revenue From Zomoto"
+            value={formatCurrency(kpis.zomotoRevenue ?? 0)}
+          />
+          <KpiTile
             label="Total Revenue"
             value={formatCurrency(kpis.revenue ?? 0)}
           />

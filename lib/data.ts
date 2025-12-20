@@ -36,7 +36,7 @@ export type Order = {
   status: "paid" | "pending";
   createdAt: string; // ISO
   category: "Beverages" | "Snacks" | "Meals" | "Desserts";
-  payment_method: "Offline" | "Online";
+  payment_method: "Offline" | "Online" | "Zomoto";
 };
 
 export type KPI = {
@@ -146,6 +146,7 @@ export function computeKPIs(orders: Order[]): KPI {
   // ---- Payment Method Revenue Breakdown ----
   let offlineRevenue = 0;
   let onlineRevenue = 0;
+  let zomotoRevenue = 0;
   // let mixedRevenue = 0;
 
   orders.forEach((o) => {
@@ -159,6 +160,10 @@ export function computeKPIs(orders: Order[]): KPI {
       case "Online":
         onlineRevenue += o.total;
         break;
+        
+      case "Zomoto":
+        zomotoRevenue += o.total;
+        break;
 
       // case "Mixed":
       //   mixedRevenue += o.total;
@@ -170,6 +175,7 @@ export function computeKPIs(orders: Order[]): KPI {
     revenue,
     offlineRevenue,
     onlineRevenue,
+    zomotoRevenue,
     // mixedRevenue,
     orders: ordersCount,
     avgTicket,
